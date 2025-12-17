@@ -21,6 +21,9 @@ public class SkiSlope {
 
     private boolean closed = false;
 
+    public SkiSlope() {
+    }
+
     public SkiSlope(String name, Integer length, SlopeDifficulty difficulty, SkiResort skiResort, boolean closed) {
         this.name = name;
         this.length = length;
