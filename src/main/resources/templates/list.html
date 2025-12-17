@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Ski Slope List</title>
 </head>
@@ -7,33 +7,36 @@
 
 <div>
     <!-- The form below should invoke the method SkiSlopeController.listAll -->
-    <form id="filter-form">
+    <form id="filter-form" th:action="@{/ski-slopes}" method="get">
         <label for="name">Slope Name</label>
-        <input id="name" type="text" name=""/>
+        <input id="name" type="text" name="name" th:value="${name}">
 
         <label for="length">Slope Length (in meters)</label>
-        <input id="length" type="number" name=""/>
+        <input id="length" type="number" name="length" th:value="${length}">
 
         <label for="difficulty">Slope Difficulty</label>
-        <select id="difficulty" name="">
+        <select id="difficulty" name="difficulty">
             <option value="">All</option>
             <!-- For each SlopeDifficulty you should have one <option> like below  -->
-            <option>[slopeDifficulty]</option>
+            <option th:each="d : ${difficulties}" th:value="${d}" th:text="${d}"
+                    th:selected="${d} == ${selectedDifficulty}">[slopeDifficulty]</option>
         </select>
 
         <label for="skiResort">Ski Resort</label>
-        <select id="skiResort" name="">
+        <select id="skiResort" name="skiResort">
             <option value="">All</option>
             <!-- For each ski resort you should have one <option> like below  -->
-            <option>[skiResort.name]</option>
+            <option th:each="resort : ${skiResorts}" th:value="${resort.id}" th:text="${resort.name}"
+                    th:selected="${resort.id} == ${selectedResort}">[skiResort.name]</option>
         </select>
 
+        <input type="hidden" name="pageSize" th:value="${pageSize}">
         <button id="filter" type="submit">Filter</button>
     </form>
 
     <div>
         <!-- SkiSlopeController.showAdd -->
-        <a href="" class="add-item">Add new ski slope</a>
+        <a href="/ski-slopes/add" class="add-item">Add new ski slope</a>
     </div>
 
     <table>
@@ -46,23 +49,23 @@
             <th>Actions</th>
         </tr>
         <!-- For each ski slope you should have one <tr> like below -->
-        <tr class="item">
-            <td>[slope.name]</td>
-            <td>[slope.length]</td>
-            <td>[slope.difficulty]</td>
-            <td>[slope.skiResort.name]</td>
-            <td>[slope.closed] -> OPEN/CLOSED</td>
+        <tr class="item" th:each="slope : ${slopes}">
+            <td th:text="${slope.name}">[slope.name]</td>
+            <td th:text="${slope.length}">[slope.length]</td>
+            <td th:text="${slope.difficulty}">[slope.difficulty]</td>
+            <td th:text="${slope.skiResort.name}">[slope.skiResort.name]</td>
+            <td th:text="${slope.closed} ? 'CLOSED' : 'OPEN'">[slope.closed] -> OPEN/CLOSED</td>
             <td>
                 <!-- SkiSlopeController.edit -->
-                <a class="edit-item">Edit</a>
+                <a th:href="@{'/ski-slopes/edit/' + ${slope.id}}" class="edit-item">Edit</a>
 
                 <!-- SkiSlopeController.delete -->
-                <form>
+                <form th:action="@{'/ski-slopes/delete/' + ${slope.id}}" method="post">
                     <button type="submit" class="delete-item">Delete</button>
                 </form>
 
                 <!-- SkiSlopeController.close -->
-                <form>
+                <form th:if="${!slope.closed}" th:action="@{'/ski-slopes/close/' + ${slope.id}}" method="post">
                     <button type="submit" class="close-item">Close</button>
                 </form>
             </td>
@@ -71,6 +74,13 @@
 
 </div>
 <div>
+    <div th:if="${page.totalPages > 1}">
+        <a th:if="${page.hasPrevious()}"
+           th:href="@{|/ski-slopes?pageNum=${page.number - 1}&pageSize=${pageSize}&name=${name}&length=${length}&difficulty=${selectedDifficulty}&skiResort=${selectedResort}|}">Previous</a>
+        <span th:text="${page.number + 1}"></span>/<span th:text="${page.totalPages}"></span>
+        <a th:if="${page.hasNext()}"
+           th:href="@{|/ski-slopes?pageNum=${page.number + 1}&pageSize=${pageSize}&name=${name}&length=${length}&difficulty=${selectedDifficulty}&skiResort=${selectedResort}|}">Next</a>
+    </div>
     <ul id="nav">
         <li><a href="/">Home</a></li>
         <li><a href="/login">Login</a></li>
