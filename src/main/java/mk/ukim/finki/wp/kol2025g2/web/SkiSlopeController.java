@@ -44,11 +44,10 @@ public class SkiSlopeController {
                           @RequestParam(required = false) Integer pageNum,
                           @RequestParam(required = false) Integer pageSize,
                           Model model) {
-        int resolvedPageSize = pageSize == null ? 5 : pageSize;
-        int resolvedPageNum = pageNum == null || pageNum < 1 ? 1 : pageNum;
-        int zeroBasedPage = resolvedPageNum - 1;
+        int page = pageNum == null ? 0 : pageNum;
+        int size = pageSize == null ? 5 : pageSize;
 
-        Page<SkiSlope> skiSlopes = this.skiSlopeService.findPage(name, length, difficulty, skiResort, zeroBasedPage, resolvedPageSize);
+        Page<SkiSlope> skiSlopes = this.skiSlopeService.findPage(name, length, difficulty, skiResort, page, size);
 
         model.addAttribute("page", skiSlopes);
         model.addAttribute("slopes", skiSlopes.getContent());
@@ -59,8 +58,7 @@ public class SkiSlopeController {
         model.addAttribute("length", length);
         model.addAttribute("selectedDifficulty", difficulty);
         model.addAttribute("selectedResort", skiResort);
-        model.addAttribute("pageSize", resolvedPageSize);
-        model.addAttribute("currentPage", resolvedPageNum);
+        model.addAttribute("pageSize", size);
 
         return "list";
     }
