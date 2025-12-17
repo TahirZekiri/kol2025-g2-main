@@ -1,8 +1,24 @@
 package mk.ukim.finki.wp.kol2025g2.web;
 
+import mk.ukim.finki.wp.kol2025g2.model.SkiSlope;
 import mk.ukim.finki.wp.kol2025g2.model.SlopeDifficulty;
+import mk.ukim.finki.wp.kol2025g2.service.SkiResortService;
+import mk.ukim.finki.wp.kol2025g2.service.SkiSlopeService;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
+@Controller
 public class SkiSlopeController {
+
+    private final SkiSlopeService skiSlopeService;
+    private final SkiResortService skiResortService;
+
+    public SkiSlopeController(SkiSlopeService skiSlopeService, SkiResortService skiResortService) {
+        this.skiSlopeService = skiSlopeService;
+        this.skiResortService = skiResortService;
+    }
 
     /**
      * This method should use the "list.html" template to display all ski slopes.
@@ -20,8 +36,33 @@ public class SkiSlopeController {
      * @param pageSize   The number of items per page
      * @return The view "list.html".
      */
-    public String listAll(String name, Integer length, SlopeDifficulty difficulty, Long skiResort, Integer pageNum, Integer pageSize) {
-        return "";
+    @GetMapping({"/", "/ski-slopes"})
+    public String listAll(@RequestParam(required = false) String name,
+                          @RequestParam(required = false) Integer length,
+                          @RequestParam(required = false) SlopeDifficulty difficulty,
+                          @RequestParam(required = false) Long skiResort,
+                          @RequestParam(required = false) Integer pageNum,
+                          @RequestParam(required = false) Integer pageSize,
+                          Model model) {
+        int resolvedPageSize = pageSize == null ? 5 : pageSize;
+        int resolvedPageNum = pageNum == null || pageNum < 1 ? 1 : pageNum;
+        int zeroBasedPage = resolvedPageNum - 1;
+
+        Page<SkiSlope> skiSlopes = this.skiSlopeService.findPage(name, length, difficulty, skiResort, zeroBasedPage, resolvedPageSize);
+
+        model.addAttribute("page", skiSlopes);
+        model.addAttribute("slopes", skiSlopes.getContent());
+        model.addAttribute("difficulties", SlopeDifficulty.values());
+        model.addAttribute("skiResorts", this.skiResortService.listAll());
+
+        model.addAttribute("name", name);
+        model.addAttribute("length", length);
+        model.addAttribute("selectedDifficulty", difficulty);
+        model.addAttribute("selectedResort", skiResort);
+        model.addAttribute("pageSize", resolvedPageSize);
+        model.addAttribute("currentPage", resolvedPageNum);
+
+        return "list";
     }
 
     /**
@@ -30,8 +71,11 @@ public class SkiSlopeController {
      *
      * @return The view "form.html".
      */
-    public String showAdd() {
-        return "";
+    @GetMapping("/ski-slopes/add")
+    public String showAdd(Model model) {
+        model.addAttribute("skiResorts", this.skiResortService.listAll());
+        model.addAttribute("difficulties", SlopeDifficulty.values());
+        return "form";
     }
 
     /**
@@ -41,8 +85,12 @@ public class SkiSlopeController {
      *
      * @return The view "form.html".
      */
-    public String showEdit(Long id) {
-        return "";
+    @GetMapping("/ski-slopes/edit/{id}")
+    public String showEdit(@PathVariable Long id, Model model) {
+        model.addAttribute("skiSlope", this.skiSlopeService.findById(id));
+        model.addAttribute("skiResorts", this.skiResortService.listAll());
+        model.addAttribute("difficulties", SlopeDifficulty.values());
+        return "form";
     }
 
     /**
@@ -52,8 +100,13 @@ public class SkiSlopeController {
      *
      * @return The view "list.html".
      */
-    public String create(String name, Integer length, SlopeDifficulty difficulty, Long skiResort) {
-        return "";
+    @PostMapping("/ski-slopes")
+    public String create(@RequestParam String name,
+                         @RequestParam Integer length,
+                         @RequestParam SlopeDifficulty difficulty,
+                         @RequestParam Long skiResort) {
+        this.skiSlopeService.create(name, length, difficulty, skiResort);
+        return "redirect:/ski-slopes";
     }
 
     /**
@@ -63,8 +116,14 @@ public class SkiSlopeController {
      *
      * @return The view "list.html".
      */
-    public String update(Long id, String name, Integer length, SlopeDifficulty difficulty, Long skiResort) {
-        return "";
+    @PostMapping("/ski-slopes/{id}")
+    public String update(@PathVariable Long id,
+                         @RequestParam String name,
+                         @RequestParam Integer length,
+                         @RequestParam SlopeDifficulty difficulty,
+                         @RequestParam Long skiResort) {
+        this.skiSlopeService.update(id, name, length, difficulty, skiResort);
+        return "redirect:/ski-slopes";
     }
 
     /**
@@ -74,8 +133,10 @@ public class SkiSlopeController {
      *
      * @return The view "list.html".
      */
-    public String delete(Long id) {
-        return "";
+    @PostMapping("/ski-slopes/delete/{id}")
+    public String delete(@PathVariable Long id) {
+        this.skiSlopeService.delete(id);
+        return "redirect:/ski-slopes";
     }
 
     /**
@@ -86,8 +147,10 @@ public class SkiSlopeController {
      * @param id The ID of the ski slope to close.
      * @return The view "list.html".
      */
-    public String close(Long id) {
-        return "";
+    @PostMapping("/ski-slopes/close/{id}")
+    public String close(@PathVariable Long id) {
+        this.skiSlopeService.close(id);
+        return "redirect:/ski-slopes";
     }
 
 }
